@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Performance · Pronostics CdM 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .gauges {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: .6rem 1.25rem 0;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: .85rem;
+    }
+    .gauge {
+      background: linear-gradient(180deg, var(--surface), var(--surface-2));
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      padding: 1rem 1.1rem;
+    }
+    .gauge--primary { grid-column: 1 / -1; border-color: rgba(251, 192, 45, 0.45); }
+    .gauge__label {
+      margin: 0;
+      font-family: var(--mono);
+      font-size: .66rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--fog);
+    }
+    .gauge__value {
+      font-family: var(--display);
+      font-weight: 700;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      margin: .35rem 0 0;
+      font-size: 2.4rem;
+    }
+    .gauge--primary .gauge__value { font-size: 3.4rem; color: var(--signal); }
+    .gauge__hint { margin: .3rem 0 0; font-size: .76rem; color: var(--fog); }
+
+    .panel {
+      max-width: var(--maxw);
+      margin: .85rem auto 0;
+      padding: 0 1.25rem;
+    }
+    .panel__card {
+      background: linear-gradient(180deg, var(--surface), var(--surface-2));
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      padding: 1.1rem 1.15rem;
+    }
+    .panel h2 {
+      font-family: var(--display);
+      text-transform: uppercase;
+      letter-spacing: .02em;
+      font-size: 1.3rem;
+      margin: 0 0 .8rem;
+    }
+    .vrow, .crow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      padding: .5rem 0;
+      border-top: 1px solid var(--line);
+      font-size: .88rem;
+    }
+    .vrow:first-of-type, .crow:first-of-type { border-top: 0; }
+    .vrow__id { font-family: var(--mono); color: var(--home); }
+    .vrow__rps b { font-family: var(--mono); color: var(--chalk); }
+    .crow__bars { flex: 1 1 auto; display: grid; gap: 4px; max-width: 260px; }
+    .minibar { height: 7px; border-radius: 999px; background: rgba(255,255,255,.05); overflow: hidden; }
+    .minibar i { display: block; height: 100%; }
+    .minibar--pred i { background: var(--signal); }
+    .minibar--obs i { background: var(--home); }
+    .crow__label { font-family: var(--mono); font-size: .72rem; color: var(--fog); white-space: nowrap; }
+    .legend-line { font-family: var(--mono); font-size: .7rem; color: var(--fog); margin: 0 0 .7rem; }
+    .legend-line i { display: inline-block; width: .6rem; height: .6rem; border-radius: 2px; vertical-align: middle; margin: 0 .25rem 0 .8rem; }
+
+    .actions { max-width: var(--maxw); margin: 1rem auto 0; padding: 0 1.25rem; }
+    .btn {
+      font-family: var(--mono);
+      font-size: .8rem;
+      letter-spacing: .04em;
+      color: var(--pitch);
+      background: var(--signal);
+      border: 0;
+      border-radius: 999px;
+      padding: .7rem 1.2rem;
+      cursor: pointer;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    .btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
+    .btn[disabled] { opacity: .55; cursor: progress; transform: none; }
+    .action-note { font-family: var(--mono); font-size: .72rem; color: var(--fog); margin: .6rem 0 0; }
+  </style>
+</head>
+<body>
+  <header class="masthead">
+    <div class="masthead__inner">
+      <span class="crest" aria-hidden="true">’26</span>
+      <div class="masthead__id">
+        <p class="eyebrow">Coupe du Monde · Auto-évaluation</p>
+        <h1 class="wordmark">Performance</h1>
+      </div>
+      <nav class="masthead__nav" aria-label="Sections">
+        <a href="/">Matchs</a>
+        <a href="/performance.html" class="is-active">Performance</a>
+      </nav>
+    </div>
+    <p class="thesis">
+      Le modèle note chacun de ses pronostics passés contre le score réel.
+      <span id="count" class="thesis__count"></span>
+    </p>
+  </header>
+
+  <section class="gauges" id="gauges" aria-live="polite"></section>
+
+  <section class="panel">
+    <div class="panel__card">
+      <h2>Calibration</h2>
+      <p class="legend-line">Une bonne calibration aligne le prédit et l'observé.
+        <i style="background:var(--signal)"></i>prédit <i style="background:var(--home)"></i>observé</p>
+      <div id="calibration"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel__card">
+      <h2>Versions du modèle</h2>
+      <div id="versions"></div>
+    </div>
+  </section>
+
+  <div class="actions">
+    <button id="tune" class="btn">Lancer l'auto-amélioration</button>
+    <p class="action-note">Ré-optimise les hyperparamètres par backtest et crée une nouvelle version.</p>
+  </div>
+
+  <footer class="footer" style="margin-top:1.5rem">
+    <p class="disclaimer">
+      RPS et score de Brier : plus bas = meilleur. Métriques calculées sur les
+      matchs déjà joués et réconciliés avec leur score réel.
+    </p>
+  </footer>
+
+  <script>
+    const fmt = (x) => (x === null || x === undefined) ? "—" : Number(x).toFixed(3);
+    const pctOrDash = (x) => (x === null || x === undefined) ? "—" : Math.round(x * 100) + "%";
+
+    function renderGauges(p) {
+      const g = document.getElementById("gauges");
+      if (!p.count) {
+        g.innerHTML = `<div class="gauge gauge--primary">
+          <p class="gauge__label">En attente de résultats</p>
+          <p class="gauge__value" style="font-size:1.7rem">Aucun match noté</p>
+          <p class="gauge__hint">Les métriques apparaîtront dès que des matchs pronostiqués
+            auront été joués puis réconciliés avec leur score réel.</p></div>`;
+        return;
+      }
+      g.innerHTML = `
+        <div class="gauge gauge--primary">
+          <p class="gauge__label">RPS moyen · ${p.count} matchs notés</p>
+          <p class="gauge__value">${fmt(p.rps)}</p>
+          <p class="gauge__hint">Ranked Probability Score sur le 1N2 — métrique de référence.</p>
+        </div>
+        <div class="gauge"><p class="gauge__label">Score de Brier</p><p class="gauge__value">${fmt(p.brier)}</p></div>
+        <div class="gauge"><p class="gauge__label">Log-loss</p><p class="gauge__value">${fmt(p.log_loss)}</p></div>
+        <div class="gauge"><p class="gauge__label">Score exact</p><p class="gauge__value">${pctOrDash(p.exact_rate)}</p></div>
+        <div class="gauge"><p class="gauge__label">Précision 1N2</p><p class="gauge__value">${pctOrDash(p.outcome_accuracy)}</p></div>`;
+    }
+
+    function renderCalibration(p) {
+      const el = document.getElementById("calibration");
+      const bins = (p.calibration || []).filter((b) => b.count > 0);
+      if (!bins.length) { el.innerHTML = '<p class="crow__label">Pas encore de données.</p>'; return; }
+      el.innerHTML = bins.map((b) => `
+        <div class="crow">
+          <span class="crow__label">${Math.round(b.lower * 100)}–${Math.round(b.upper * 100)}%</span>
+          <div class="crow__bars">
+            <div class="minibar minibar--pred"><i style="width:${b.mean_pred * 100}%"></i></div>
+            <div class="minibar minibar--obs"><i style="width:${b.observed * 100}%"></i></div>
+          </div>
+          <span class="crow__label">n=${b.count}</span>
+        </div>`).join("");
+    }
+
+    function renderVersions(p) {
+      const el = document.getElementById("versions");
+      if (!p.by_version || !p.by_version.length) {
+        el.innerHTML = '<p class="crow__label">Aucune version notée pour l\'instant.</p>';
+        return;
+      }
+      el.innerHTML = p.by_version.map((v) => `
+        <div class="vrow">
+          <span class="vrow__id">v${v.model_version_id}</span>
+          <span class="crow__label">${v.count} matchs</span>
+          <span class="vrow__rps">RPS <b>${fmt(v.rps)}</b></span>
+        </div>`).join("");
+    }
+
+    async function load() {
+      try {
+        const p = await (await fetch("/api/performance")).json();
+        document.getElementById("count").textContent =
+          p.count ? `${p.count} match${p.count > 1 ? "s" : ""} noté${p.count > 1 ? "s" : ""}.` : "";
+        renderGauges(p);
+        renderCalibration(p);
+        renderVersions(p);
+      } catch (e) {
+        document.getElementById("gauges").innerHTML =
+          '<div class="gauge gauge--primary"><p class="gauge__label">Erreur</p><p class="gauge__value" style="font-size:1.4rem">Données indisponibles</p></div>';
+      }
+    }
+
+    document.getElementById("tune").addEventListener("click", async (ev) => {
+      const btn = ev.currentTarget;
+      btn.disabled = true;
+      const original = btn.textContent;
+      btn.textContent = "Optimisation…";
+      try {
+        const r = await (await fetch("/api/tune", { method: "POST" })).json();
+        btn.textContent = r.model_version_id
+          ? `Nouvelle version v${r.model_version_id} (RPS ${fmt(r.backtest_rps)})`
+          : r.message;
+      } catch {
+        btn.textContent = "Échec de l'optimisation";
+      }
+      setTimeout(() => { btn.textContent = original; btn.disabled = false; load(); }, 2500);
+    });
+
+    load();
+  </script>
+</body>
+</html>

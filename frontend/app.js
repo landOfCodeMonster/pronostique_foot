@@ -15,8 +15,26 @@ const RELIABILITY = { faible: "low", moyen: "mid", "élevé": "high" };
 const LIVE = new Set(["IN_PLAY", "PAUSED"]);
 
 let allMatches = [];
+let refreshTimer = null;
+const REFRESH_MS = 60000;
 
 const isLive = (m) => LIVE.has(m.status);
+
+// Re-poll only while a match is live, every 60s. The single API call is cached
+// (60s) server-side, so this stays at ~1 request/minute, far under the limit.
+function scheduleAutoRefresh() {
+  if (refreshTimer) {
+    clearTimeout(refreshTimer);
+    refreshTimer = null;
+  }
+  const note = document.getElementById("autorefresh");
+  if (allMatches.some(isLive)) {
+    if (note) note.textContent = "Scores en direct actualisés automatiquement (60 s).";
+    refreshTimer = setTimeout(load, REFRESH_MS);
+  } else if (note) {
+    note.textContent = "";
+  }
+}
 
 function fmtKickoff(iso) {
   try {
@@ -134,6 +152,7 @@ async function load() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     allMatches = await res.json();
     render(document.getElementById("search").value);
+    scheduleAutoRefresh();
   } catch (e) {
     feed.innerHTML =
       '<p class="state state--error">Données indisponibles. Vérifiez la clé API et que le serveur tourne.</p>';

@@ -36,5 +36,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         base_url="https://api.football-data.org/v4",
         db_path=PROJECT_ROOT / "data" / "app.db",
         cache_dir=PROJECT_ROOT / "data" / "cache",
-        cache_ttl_seconds=3600,
+        # 60s keeps live scores fresh while capping upstream calls at ~1/min
+        # (well under football-data.org's 10 requests/minute limit).
+        cache_ttl_seconds=60,
     )

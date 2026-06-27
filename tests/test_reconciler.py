@@ -42,3 +42,14 @@ def test_reconcile_attaches_real_score(tmp_path):
 def test_reconcile_ignores_unpredicted_matches(tmp_path):
     conn, api = _setup(tmp_path)  # no predictions stored
     assert reconcile(api, conn) == 0
+
+
+def test_reconcile_updates_corrected_score(tmp_path):
+    # A previously stored result (1-2) is later corrected by the source to 2-2.
+    conn, api = _setup(tmp_path)  # RAW match 1 is FINISHED 2-2
+    storage.save_prediction(conn, _pred(1))
+    storage.save_result(conn, 1, 1, 2, "FINISHED")  # stale/incorrect score
+    assert reconcile(api, conn) == 1                 # detects and updates
+    joined = storage.predictions_with_results(conn)
+    assert joined[0]["actual_home"] == 2 and joined[0]["actual_away"] == 2
+    assert reconcile(api, conn) == 0                 # now idempotent

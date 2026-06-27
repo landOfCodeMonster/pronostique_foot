@@ -53,7 +53,7 @@ function card(m, i) {
     : `<div class="board__score"><span>${m.pred_home}</span><span class="board__sep">–</span><span>${m.pred_away}</span></div>`;
   const forecast = live
     ? `<p class="forecast">Pronostic <b>${m.pred_home}–${m.pred_away}</b></p>`
-    : "";
+    : '<p class="forecast forecast--muted">Score le plus probable</p>';
   return `
   <article class="match${live ? " match--live" : ""}" style="--i:${i}">
     <div class="match__top">
@@ -75,11 +75,12 @@ function card(m, i) {
         <span class="odds__seg odds__seg--draw" data-w="${m.prob_draw * 100}"></span>
         <span class="odds__seg odds__seg--away" data-w="${m.prob_away * 100}"></span>
       </div>
-      <div class="odds__legend">
-        <span class="odds__key"><i class="dot dot--home"></i>1 <b>${pct(m.prob_home)}</b></span>
-        <span class="odds__key"><i class="dot dot--draw"></i>N <b>${pct(m.prob_draw)}</b></span>
-        <span class="odds__key"><i class="dot dot--away"></i>2 <b>${pct(m.prob_away)}</b></span>
+      <div class="odds__legend" aria-hidden="true">
+        <span class="odds__key" title="Probabilité de victoire — ${home}"><i class="dot dot--home"></i>${home} <b>${pct(m.prob_home)}</b></span>
+        <span class="odds__key" title="Probabilité de match nul"><i class="dot dot--draw"></i>Nul <b>${pct(m.prob_draw)}</b></span>
+        <span class="odds__key" title="Probabilité de victoire — ${away}"><i class="dot dot--away"></i>${away} <b>${pct(m.prob_away)}</b></span>
       </div>
+      <p class="odds__hint">Chances de victoire / match nul</p>
     </div>
 
     <div class="match__bottom">

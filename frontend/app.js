@@ -11,11 +11,12 @@ const STAGES = {
   FINAL: "Finale",
 };
 
-const RELIABILITY = {
-  faible: "low",
-  moyen: "mid",
-  "élevé": "high",
-};
+const RELIABILITY = { faible: "low", moyen: "mid", "élevé": "high" };
+const LIVE = new Set(["IN_PLAY", "PAUSED"]);
+
+let allMatches = [];
+
+const isLive = (m) => LIVE.has(m.status);
 
 function fmtKickoff(iso) {
   try {
@@ -27,6 +28,11 @@ function fmtKickoff(iso) {
   }
 }
 
+// Lowercase + strip accents so "bresil" matches "Brésil".
+function normalize(s) {
+  return String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+
 function escapeHtml(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 }
@@ -36,11 +42,15 @@ function card(m, i) {
   const level = RELIABILITY[m.reliability] || "low";
   const home = escapeHtml(m.home_team);
   const away = escapeHtml(m.away_team);
+  const live = isLive(m);
+  const status = live
+    ? '<span class="live">En cours</span>'
+    : `<span class="match__kick">${fmtKickoff(m.utc_date)}</span>`;
   return `
-  <article class="match" style="--i:${i}">
+  <article class="match${live ? " match--live" : ""}" style="--i:${i}">
     <div class="match__top">
       <span class="match__stage">${stage}</span>
-      <span class="match__kick">${fmtKickoff(m.utc_date)}</span>
+      ${status}
     </div>
 
     <div class="board">
@@ -85,29 +95,44 @@ function animateBars() {
   });
 }
 
-async function load() {
+function render(query = "") {
   const feed = document.getElementById("matches");
   const count = document.getElementById("count");
+  const q = normalize(query.trim());
+  const list = q
+    ? allMatches.filter((m) => normalize(m.home_team).includes(q) || normalize(m.away_team).includes(q))
+    : allMatches;
+
+  if (!list.length) {
+    feed.innerHTML = q
+      ? `<p class="state">Aucun match pour « ${escapeHtml(query.trim())} ».</p>`
+      : '<p class="state">Aucun match à venir pour l\'instant. Revenez à l\'approche d\'une journée de Coupe du Monde.</p>';
+    count.textContent = q ? "" : "";
+    return;
+  }
+
+  feed.innerHTML = list.map(card).join("");
+  const n = list.length;
+  const total = allMatches.length;
+  const label = q ? `${n} / ${total} match${total > 1 ? "s" : ""}` : `${n} match${n > 1 ? "s" : ""} analysé${n > 1 ? "s" : ""}.`;
+  count.textContent = label;
+  animateBars();
+}
+
+async function load() {
+  const feed = document.getElementById("matches");
   try {
     const res = await fetch("/api/matches/upcoming");
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    if (!data.length) {
-      feed.innerHTML =
-        '<p class="state">Aucun match à venir pour l\'instant. Revenez à l\'approche d\'une journée de Coupe du Monde.</p>';
-      count.textContent = "";
-      return;
-    }
-
-    feed.innerHTML = data.map(card).join("");
-    count.textContent = `${data.length} match${data.length > 1 ? "s" : ""} analysé${data.length > 1 ? "s" : ""}.`;
-    animateBars();
+    allMatches = await res.json();
+    render(document.getElementById("search").value);
   } catch (e) {
     feed.innerHTML =
       '<p class="state state--error">Données indisponibles. Vérifiez la clé API et que le serveur tourne.</p>';
-    count.textContent = "";
+    document.getElementById("count").textContent = "";
   }
 }
+
+document.getElementById("search").addEventListener("input", (e) => render(e.target.value));
 
 load();

@@ -39,6 +39,7 @@ def prediction_view(match: dict, p: MatchPrediction, version_id: int) -> dict:
         "away_team": match["away_team"],
         "utc_date": match["utc_date"],
         "stage": match["stage"],
+        "status": match["status"],
         "pred_home": p.most_likely_score[0],
         "pred_away": p.most_likely_score[1],
         "prob_home": p.prob_home,

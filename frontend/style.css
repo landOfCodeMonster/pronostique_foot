@@ -259,6 +259,20 @@ body {
 }
 .board__sep { font-size: .55em; color: var(--fog); transform: translateY(-.18em); }
 
+/* Live score: white (chalk) to distinguish from the amber forecast */
+.board__score--live {
+  color: var(--chalk);
+  text-shadow: none;
+}
+.forecast {
+  margin: -.15rem 0 .15rem;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--fog);
+}
+.forecast b { color: var(--signal); font-weight: 700; margin-left: .2rem; }
+
 /* Probability stripe */
 .odds__bar {
   display: flex;

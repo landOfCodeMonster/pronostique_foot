@@ -46,6 +46,14 @@ function card(m, i) {
   const status = live
     ? '<span class="live">En cours</span>'
     : `<span class="match__kick">${fmtKickoff(m.utc_date)}</span>`;
+  const lh = m.live_home == null ? "·" : m.live_home;
+  const la = m.live_away == null ? "·" : m.live_away;
+  const scoreBlock = live
+    ? `<div class="board__score board__score--live"><span>${lh}</span><span class="board__sep">–</span><span>${la}</span></div>`
+    : `<div class="board__score"><span>${m.pred_home}</span><span class="board__sep">–</span><span>${m.pred_away}</span></div>`;
+  const forecast = live
+    ? `<p class="forecast">Pronostic <b>${m.pred_home}–${m.pred_away}</b></p>`
+    : "";
   return `
   <article class="match${live ? " match--live" : ""}" style="--i:${i}">
     <div class="match__top">
@@ -55,11 +63,10 @@ function card(m, i) {
 
     <div class="board">
       <div class="board__team board__team--home"><span class="board__name">${home}</span></div>
-      <div class="board__score">
-        <span>${m.pred_home}</span><span class="board__sep">–</span><span>${m.pred_away}</span>
-      </div>
+      ${scoreBlock}
       <div class="board__team board__team--away"><span class="board__name">${away}</span></div>
     </div>
+    ${forecast}
 
     <div class="odds">
       <div class="odds__bar" role="img"

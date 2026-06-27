@@ -47,7 +47,10 @@ def init_db(db_path: Path) -> None:
 
 
 def connect(db_path: Path) -> sqlite3.Connection:
-    conn = sqlite3.connect(db_path)
+    # check_same_thread=False: FastAPI runs sync routes in a worker thread, so the
+    # connection is used from a different thread than the one that created it. Safe
+    # here because this is a low-traffic, single-user app with serialized access.
+    conn = sqlite3.connect(db_path, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     return conn
 

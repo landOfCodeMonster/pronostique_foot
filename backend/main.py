@@ -63,6 +63,36 @@ def compute_performance(conn) -> dict:
     }
 
 
+def compute_history(conn) -> list[dict]:
+    """Finished, reconciled matches we predicted — prediction vs real score."""
+    items = []
+    for row in storage.predictions_with_results(conn):
+        probs = (row["prob_home"], row["prob_draw"], row["prob_away"])
+        outcome = outcome_from_score(row["actual_home"], row["actual_away"])
+        predicted_outcome = max(range(3), key=lambda i: probs[i])
+        items.append({
+            "match_id": row["match_id"],
+            "home_team": row["home_team"],
+            "away_team": row["away_team"],
+            "utc_date": row["match_utc_date"],
+            "pred_home": row["pred_home"],
+            "pred_away": row["pred_away"],
+            "actual_home": row["actual_home"],
+            "actual_away": row["actual_away"],
+            "prob_home": row["prob_home"],
+            "prob_draw": row["prob_draw"],
+            "prob_away": row["prob_away"],
+            "reliability": row["reliability"],
+            "model_version_id": row["model_version_id"],
+            "outcome_correct": predicted_outcome == outcome,
+            "exact": exact_hit((row["pred_home"], row["pred_away"]),
+                               (row["actual_home"], row["actual_away"])),
+            "rps": rps(probs, outcome),
+        })
+    items.sort(key=lambda x: x["utc_date"], reverse=True)
+    return items
+
+
 def build_app(api: FootballAPI, conn) -> FastAPI:
     app = FastAPI(title="Pronostics Coupe du Monde 2026")
 
@@ -70,6 +100,11 @@ def build_app(api: FootballAPI, conn) -> FastAPI:
     def upcoming():
         reconcile(api, conn)
         return predict_upcoming(api, conn)
+
+    @app.get("/api/matches/history")
+    def history():
+        reconcile(api, conn)
+        return compute_history(conn)
 
     @app.get("/api/performance")
     def performance():

@@ -34,13 +34,15 @@ set -a && source .env && set +a
 ```
 
 - Matchs : http://127.0.0.1:8000
+- Historique : http://127.0.0.1:8000/history.html
 - Performance : http://127.0.0.1:8000/performance.html
 
 ## Endpoints
 
 | Méthode | Route                     | Rôle                                            |
 |---------|---------------------------|-------------------------------------------------|
-| GET     | `/api/matches/upcoming`   | Matchs à venir + pronostics (et enregistrement) |
+| GET     | `/api/matches/upcoming`   | Matchs à venir + en cours + pronostics          |
+| GET     | `/api/matches/history`    | Matchs passés : pronostic vs score réel + verdict |
 | GET     | `/api/performance`        | Métriques agrégées (RPS, Brier, calibration…)   |
 | POST    | `/api/reconcile`          | Associer les scores réels aux pronostics        |
 | POST    | `/api/tune`               | Lancer l'auto-amélioration (nouvelle version)   |

@@ -54,3 +54,25 @@ def test_tune_endpoint_creates_version(client):
     r = c.post("/api/tune")
     assert r.status_code == 200
     assert r.json()["model_version_id"] >= 1
+
+
+def test_history_endpoint_pairs_prediction_with_result(client):
+    c, conn = client
+    # We predicted match 1 (FINISHED 2-0 in RAW) with a home-favoured forecast.
+    storage.save_prediction(conn, {
+        "match_id": 1, "competition": "WC", "home_team": "A", "away_team": "B",
+        "match_utc_date": "2026-06-20T18:00:00Z", "model_version_id": 1,
+        "pred_home": 2, "pred_away": 0, "prob_home": 0.6, "prob_draw": 0.25, "prob_away": 0.15,
+        "prob_over25": 0.5, "prob_btts": 0.4, "lambda_home": 1.7, "lambda_away": 0.8,
+        "reliability": "moyen",
+    })
+    r = c.get("/api/matches/history")
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data) == 1
+    item = data[0]
+    assert item["actual_home"] == 2 and item["actual_away"] == 0
+    assert item["pred_home"] == 2 and item["pred_away"] == 0
+    assert item["outcome_correct"] is True   # home favoured, home won
+    assert item["exact"] is True             # exact score matched
+    assert "rps" in item

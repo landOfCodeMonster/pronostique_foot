@@ -322,6 +322,9 @@ body {
   padding: .28rem .65rem;
 }
 .chip b { color: var(--chalk); font-family: var(--mono); font-weight: 700; margin-left: .15rem; }
+.chip--ok { color: var(--home); border-color: rgba(52, 216, 192, 0.4); }
+.chip--no { color: var(--away); border-color: rgba(251, 122, 147, 0.35); }
+.chip--exact { color: var(--signal); border-color: rgba(251, 192, 45, 0.4); }
 
 .signal {
   display: inline-flex;

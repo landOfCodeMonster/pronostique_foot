@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Historique · Pronostics CdM 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="masthead">
+    <div class="masthead__inner">
+      <span class="crest" aria-hidden="true">’26</span>
+      <div class="masthead__id">
+        <p class="eyebrow">Coupe du Monde · Pronostic vs réalité</p>
+        <h1 class="wordmark">Historique</h1>
+      </div>
+      <nav class="masthead__nav" aria-label="Sections">
+        <a href="/">Matchs</a>
+        <a href="/history.html" class="is-active">Historique</a>
+        <a href="/performance.html">Performance</a>
+      </nav>
+    </div>
+    <p class="thesis">
+      Chaque match pronostiqué puis joué, avec le score prédit, le score réel et le verdict.
+      <span id="count" class="thesis__count"></span>
+    </p>
+  </header>
+
+  <main id="history" class="feed" aria-live="polite">
+    <p class="state">Chargement de l'historique…</p>
+  </main>
+
+  <footer class="footer">
+    <p class="disclaimer">
+      L'historique ne contient que les matchs que l'app a réellement pronostiqués avant
+      ou pendant la rencontre, puis réconciliés avec leur score final.
+    </p>
+  </footer>
+
+  <script>
+    const pct = (x) => `${Math.round(x * 100)}%`;
+    function fmtDate(iso) {
+      try { return new Date(iso).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).toUpperCase(); }
+      catch { return iso; }
+    }
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    }
+
+    function card(m) {
+      const home = escapeHtml(m.home_team);
+      const away = escapeHtml(m.away_team);
+      const oneTwo = m.outcome_correct
+        ? '<span class="chip chip--ok">1N2 ✓</span>'
+        : '<span class="chip chip--no">1N2 ✗</span>';
+      const exact = m.exact
+        ? '<span class="chip chip--exact">Score exact ✓</span>'
+        : '<span class="chip">Score exact ✗</span>';
+      return `
+      <article class="match">
+        <div class="match__top">
+          <span class="match__stage">${fmtDate(m.utc_date)}</span>
+          <span class="match__kick">RPS ${Number(m.rps).toFixed(2)}</span>
+        </div>
+        <div class="board">
+          <div class="board__team board__team--home"><span class="board__name">${home}</span></div>
+          <div class="board__score board__score--live">
+            <span>${m.actual_home}</span><span class="board__sep">–</span><span>${m.actual_away}</span>
+          </div>
+          <div class="board__team board__team--away"><span class="board__name">${away}</span></div>
+        </div>
+        <p class="forecast">Pronostic <b>${m.pred_home}–${m.pred_away}</b> · 1 ${pct(m.prob_home)} / N ${pct(m.prob_draw)} / 2 ${pct(m.prob_away)}</p>
+        <div class="match__bottom">
+          <div class="chips">${oneTwo}${exact}</div>
+          <div class="signal signal--${({faible:'low',moyen:'mid','élevé':'high'})[m.reliability] || 'low'}">
+            <span></span><span></span><span></span><em>${escapeHtml(m.reliability)}</em>
+          </div>
+        </div>
+      </article>`;
+    }
+
+    async function load() {
+      const feed = document.getElementById("history");
+      const count = document.getElementById("count");
+      try {
+        const data = await (await fetch("/api/matches/history")).json();
+        if (!data.length) {
+          feed.innerHTML = '<p class="state">Aucun match noté pour l\'instant. L\'historique se remplit dès qu\'un match pronostiqué se termine.</p>';
+          count.textContent = "";
+          return;
+        }
+        feed.innerHTML = data.map(card).join("");
+        const ok = data.filter((m) => m.outcome_correct).length;
+        const ex = data.filter((m) => m.exact).length;
+        count.textContent = `${data.length} matchs · ${Math.round((ok / data.length) * 100)}% 1N2 trouvés · ${ex} score(s) exact(s).`;
+      } catch (e) {
+        feed.innerHTML = '<p class="state state--error">Historique indisponible. Vérifiez la clé API et le serveur.</p>';
+        count.textContent = "";
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>

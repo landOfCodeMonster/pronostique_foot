@@ -38,6 +38,7 @@ body {
   background-attachment: fixed;
   min-height: 100vh;
   line-height: 1.5;
+  overflow-x: hidden;
 }
 
 /* ---------- Masthead ---------- */
@@ -250,13 +251,15 @@ body {
   gap: .5rem;
   margin: .55rem 0 .75rem;
 }
+.board__team { min-width: 0; }
 .board__name {
   font-family: var(--display);
   font-weight: 600;
-  font-size: clamp(1.15rem, 5.2vw, 1.5rem);
+  font-size: clamp(1.05rem, 4.6vw, 1.5rem);
   text-transform: uppercase;
   letter-spacing: .01em;
   line-height: 1.04;
+  overflow-wrap: break-word;
 }
 .board__team--home { text-align: right; }
 .board__team--home .board__name { color: #BFF3EB; }
@@ -266,15 +269,16 @@ body {
 .board__score {
   display: inline-flex;
   align-items: baseline;
-  gap: .35rem;
-  padding: 0 .55rem;
+  gap: .3rem;
+  padding: 0 .4rem;
   font-family: var(--display);
   font-weight: 700;
   color: var(--signal);
-  font-size: clamp(2.4rem, 11vw, 3.2rem);
+  font-size: clamp(2rem, 9vw, 3.2rem);
   line-height: 1;
   font-variant-numeric: tabular-nums;
   text-shadow: 0 2px 18px rgba(251, 192, 45, 0.25);
+  white-space: nowrap;
 }
 .board__sep { font-size: .55em; color: var(--fog); transform: translateY(-.18em); }
 
@@ -403,6 +407,31 @@ button:focus-visible {
   outline: 2px solid var(--signal);
   outline-offset: 3px;
   border-radius: 4px;
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 560px) {
+  .masthead { padding: 1.3rem 1rem .9rem; }
+  .masthead__inner { flex-wrap: wrap; gap: .8rem; }
+  .crest { width: 46px; height: 46px; font-size: 1.25rem; }
+  .masthead__nav {
+    order: 3;
+    width: 100%;
+    flex-direction: row;
+    gap: 1.1rem;
+    text-align: left;
+    margin-top: .2rem;
+  }
+  .masthead__nav a { padding-right: 0; border-right: 0; border-bottom: 2px solid transparent; }
+  .masthead__nav a.is-active { border-right: 0; border-bottom-color: var(--signal); }
+  .feed { padding: .6rem 1rem 2rem; }
+  .searchbar { padding: 0 1rem; }
+  .searchbar__icon { left: 1.7rem; }
+  .footer { padding: 0 1rem 2rem; }
+  .board { gap: .35rem; }
+  .match { padding: .9rem .95rem 1rem; }
+  .odds__legend { font-size: .68rem; gap: .15rem .5rem; }
+  .chip { font-size: .72rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

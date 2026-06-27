@@ -72,7 +72,8 @@
           </div>
           <div class="board__team board__team--away"><span class="board__name">${away}</span></div>
         </div>
-        <p class="forecast">Pronostic <b>${m.pred_home}–${m.pred_away}</b> · 1 ${pct(m.prob_home)} / N ${pct(m.prob_draw)} / 2 ${pct(m.prob_away)}</p>
+        <p class="forecast">Pronostic <b>${m.pred_home}–${m.pred_away}</b></p>
+        <p class="forecast forecast--muted">${home} ${pct(m.prob_home)} · nul ${pct(m.prob_draw)} · ${away} ${pct(m.prob_away)}</p>
         <div class="match__bottom">
           <div class="chips">${oneTwo}${exact}</div>
           <div class="signal signal--${({faible:'low',moyen:'mid','élevé':'high'})[m.reliability] || 'low'}">

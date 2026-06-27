@@ -272,6 +272,7 @@ body {
   color: var(--fog);
 }
 .forecast b { color: var(--signal); font-weight: 700; margin-left: .2rem; }
+.forecast--muted { text-transform: uppercase; letter-spacing: .08em; font-size: .66rem; opacity: .85; }
 
 /* Probability stripe */
 .odds__bar {
@@ -289,10 +290,21 @@ body {
 .odds__legend {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .2rem .75rem;
   margin-top: .45rem;
   font-family: var(--mono);
   font-size: .72rem;
   color: var(--fog);
+}
+.odds__hint {
+  margin: .3rem 0 0;
+  font-family: var(--mono);
+  font-size: .62rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--fog);
+  opacity: .65;
 }
 .odds__key { display: inline-flex; align-items: center; gap: .35rem; }
 .odds__key b { color: var(--chalk); font-weight: 700; }

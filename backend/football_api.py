@@ -9,7 +9,14 @@ from backend.config import Settings
 
 Fetcher = Callable[[str, dict], dict]
 
-_UPCOMING = {"SCHEDULED", "TIMED"}
+# Matches worth showing: not yet finished. Includes live (IN_PLAY/PAUSED) so a
+# match that has kicked off today doesn't vanish between "upcoming" and "finished".
+_OPEN = {"SCHEDULED", "TIMED", "IN_PLAY", "PAUSED"}
+_LIVE = {"IN_PLAY", "PAUSED"}
+
+
+def is_live(match: dict) -> bool:
+    return match["status"] in _LIVE
 
 
 def _default_fetcher(settings: Settings) -> Fetcher:
@@ -61,5 +68,6 @@ class FootballAPI:
         return sorted(finished, key=lambda m: m["utc_date"])
 
     def get_upcoming_matches(self) -> list[dict]:
-        upcoming = [m for m in self.get_matches() if m["status"] in _UPCOMING]
-        return sorted(upcoming, key=lambda m: m["utc_date"])
+        open_matches = [m for m in self.get_matches() if m["status"] in _OPEN]
+        # Live matches first, then by kickoff time.
+        return sorted(open_matches, key=lambda m: (not is_live(m), m["utc_date"]))

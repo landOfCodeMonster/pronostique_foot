@@ -123,6 +123,39 @@ body {
   font-size: .82rem;
 }
 
+/* ---------- Search ---------- */
+.searchbar {
+  max-width: var(--maxw);
+  margin: 1.1rem auto 0;
+  padding: 0 1.25rem;
+  position: relative;
+}
+.searchbar__icon {
+  position: absolute;
+  left: 1.95rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--fog);
+  pointer-events: none;
+}
+.searchbar__input {
+  width: 100%;
+  font-family: var(--body);
+  font-size: .95rem;
+  color: var(--chalk);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: .7rem 1rem .7rem 2.7rem;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.searchbar__input::placeholder { color: var(--fog); }
+.searchbar__input:focus {
+  outline: none;
+  border-color: var(--signal);
+  box-shadow: 0 0 0 3px rgba(251, 192, 45, 0.14);
+}
+
 /* ---------- Feed ---------- */
 .feed {
   max-width: var(--maxw);
@@ -169,6 +202,26 @@ body {
   color: var(--fog);
 }
 .match__stage { color: var(--home); opacity: .9; }
+
+.match--live { border-color: rgba(251, 122, 147, 0.5); }
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  color: var(--away);
+}
+.live::before {
+  content: "";
+  width: .5rem;
+  height: .5rem;
+  border-radius: 50%;
+  background: var(--away);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .35; transform: scale(.7); }
+}
 
 /* Scoreboard */
 .board {
@@ -307,4 +360,5 @@ button:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .match { animation: none; }
   .odds__seg { transition: none; }
+  .live::before { animation: none; }
 }

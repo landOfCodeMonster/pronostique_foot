@@ -105,6 +105,11 @@ def save_result(conn, match_id, actual_home, actual_away, status):
     conn.commit()
 
 
+def get_result(conn, match_id: int):
+    r = conn.execute("SELECT * FROM results WHERE match_id = ?", (match_id,)).fetchone()
+    return dict(r) if r else None
+
+
 def predicted_match_ids_without_result(conn):
     rows = conn.execute(
         "SELECT p.match_id FROM predictions p"

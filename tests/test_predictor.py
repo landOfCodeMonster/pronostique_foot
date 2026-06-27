@@ -41,3 +41,25 @@ def test_predict_upcoming_creates_active_version(tmp_path):
     conn, api = _setup(tmp_path)
     predict_upcoming(api, conn)
     assert storage.get_active_model_version(conn) is not None
+
+
+LIVE_RAW = {
+    "matches": [
+        {"id": 1, "utcDate": "2026-06-20T18:00:00Z", "status": "FINISHED", "stage": "GROUP_STAGE",
+         "homeTeam": {"name": "A"}, "awayTeam": {"name": "B"}, "score": {"fullTime": {"home": 3, "away": 0}}},
+        {"id": 9, "utcDate": "2026-06-27T18:00:00Z", "status": "IN_PLAY", "stage": "GROUP_STAGE",
+         "homeTeam": {"name": "A"}, "awayTeam": {"name": "B"}, "score": {"fullTime": {"home": 1, "away": 4}}},
+    ]
+}
+
+
+def test_predict_upcoming_carries_live_score(tmp_path):
+    db = tmp_path / "t.db"
+    storage.init_db(db)
+    conn = storage.connect(db)
+    settings = load_settings({"FOOTBALL_DATA_API_KEY": "x"})
+    api = FootballAPI(settings, fetcher=lambda p, q: LIVE_RAW)
+    views = predict_upcoming(api, conn)
+    live = next(v for v in views if v["match_id"] == 9)
+    assert live["status"] == "IN_PLAY"
+    assert live["live_home"] == 1 and live["live_away"] == 4

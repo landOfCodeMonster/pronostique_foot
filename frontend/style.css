@@ -122,6 +122,25 @@ body {
   font-family: var(--mono);
   font-size: .82rem;
 }
+.thesis__refresh {
+  display: block;
+  margin-top: .45rem;
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--home);
+}
+.thesis__refresh:empty { display: none; }
+.thesis__refresh::before {
+  content: "";
+  display: inline-block;
+  width: .5rem;
+  height: .5rem;
+  border-radius: 50%;
+  background: var(--away);
+  margin-right: .4rem;
+  vertical-align: middle;
+  animation: pulse 1.4s ease-in-out infinite;
+}
 
 /* ---------- Search ---------- */
 .searchbar {
@@ -390,4 +409,5 @@ button:focus-visible {
   .match { animation: none; }
   .odds__seg { transition: none; }
   .live::before { animation: none; }
+  .thesis__refresh::before { animation: none; }
 }

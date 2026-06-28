@@ -26,9 +26,10 @@ RAW = {"matches": [
 def client(tmp_path):
     db = tmp_path / "t.db"
     storage.init_db(db)
-    conn = storage.connect(db)
     api = FootballAPI(load_settings({"FOOTBALL_DATA_API_KEY": "x"}), fetcher=lambda p, q: RAW)
-    return TestClient(build_app(api, conn)), conn
+    app = build_app(api, lambda: storage.connect(db))
+    conn = storage.connect(db)  # separate connection for direct assertions
+    return TestClient(app), conn
 
 
 def test_upcoming_endpoint_returns_predictions(client):

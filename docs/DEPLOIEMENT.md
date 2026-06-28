@@ -38,6 +38,19 @@ Navigateur (PC / iPhone / Android)
 | **football-data.org** | Source de données football (matchs, scores) — plan gratuit, 10 req/min | https://www.football-data.org |
 | **Homebrew / binaire `gh`** | Outil GitHub CLI utilisé pour l'authentification et le 1er push | https://cli.github.com |
 
+### 2.1 Obtenir la clé API football-data.org
+
+1. Aller sur **https://www.football-data.org/client/register**
+2. Remplir le formulaire (nom, **email**, mot de passe), plan **gratuit (Free Tier)** — sans carte bancaire.
+3. **Valider le compte** via le lien reçu par email.
+4. Se connecter à l'**espace client** → la **clé API** (« API token ») s'affiche.
+5. Copier la clé :
+   - en local dans `.env` → `FOOTBALL_DATA_API_KEY=...`
+   - dans **Vercel → Settings → Environment Variables** (`FOOTBALL_DATA_API_KEY`).
+
+> L'app envoie cette clé dans l'en-tête HTTP `X-Auth-Token`. Plan gratuit :
+> **10 requêtes/minute**, couvre la Coupe du Monde (code `WC`).
+
 ---
 
 ## 3. Variables d'environnement (Vercel → Settings → Environment Variables)

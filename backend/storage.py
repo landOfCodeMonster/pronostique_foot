@@ -42,7 +42,8 @@ _PRED_FIELDS = [
 # --- Driver-agnostic helpers (work for both sqlite3 and libSQL/Turso) ---
 def _fetchall(conn, sql, params=()):
     cur = conn.cursor()
-    cur.execute(sql, params)
+    # libSQL requires a tuple (it rejects lists); SQLite accepts both.
+    cur.execute(sql, tuple(params))
     cols = [d[0] for d in cur.description]
     return [dict(zip(cols, row)) for row in cur.fetchall()]
 
@@ -54,7 +55,8 @@ def _fetchone(conn, sql, params=()):
 
 def _execute(conn, sql, params=()):
     cur = conn.cursor()
-    cur.execute(sql, params)
+    # libSQL requires a tuple (it rejects lists); SQLite accepts both.
+    cur.execute(sql, tuple(params))
     conn.commit()
     return cur
 

@@ -162,7 +162,7 @@ def _make_conn_factory(settings):
     return lambda: storage.connect(settings.db_path)
 
 
-def _build_default_app() -> FastAPI:
+def create_app() -> FastAPI:
     settings = load_settings()
     get_conn = _make_conn_factory(settings)
     # Ensure the schema exists once at startup (idempotent: CREATE IF NOT EXISTS).
@@ -170,6 +170,3 @@ def _build_default_app() -> FastAPI:
     storage.init_schema(conn)
     _close(conn)
     return build_app(FootballAPI(settings), get_conn)
-
-
-app = _build_default_app()

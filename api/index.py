@@ -1,2 +1,5 @@
-# Vercel serverless entrypoint — exposes the FastAPI ASGI app.
-from backend.main import app  # noqa: F401
+# Vercel serverless entrypoint (and local uvicorn target): builds the FastAPI app.
+# `app` is assigned from a call so Vercel's FastAPI detector recognizes it here.
+from backend.main import create_app
+
+app = create_app()

@@ -30,7 +30,7 @@ cp .env.example .env   # puis renseigner FOOTBALL_DATA_API_KEY
 
 ```bash
 set -a && source .env && set +a
-.venv/bin/python -m uvicorn backend.main:app --reload
+.venv/bin/python -m uvicorn api.index:app --reload
 ```
 
 - Matchs : http://127.0.0.1:8000

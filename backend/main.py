@@ -93,30 +93,59 @@ def compute_history(conn) -> list[dict]:
     return items
 
 
-def build_app(api: FootballAPI, conn) -> FastAPI:
+def _close(conn) -> None:
+    try:
+        conn.close()
+    except Exception:
+        pass
+
+
+def build_app(api: FootballAPI, get_conn) -> FastAPI:
+    """`get_conn` is a factory returning a fresh DB connection per request
+    (required for serverless: no long-lived shared connection)."""
     app = FastAPI(title="Pronostics Coupe du Monde 2026")
 
     @app.get("/api/matches/upcoming")
     def upcoming():
-        reconcile(api, conn)
-        return predict_upcoming(api, conn)
+        conn = get_conn()
+        try:
+            reconcile(api, conn)
+            return predict_upcoming(api, conn)
+        finally:
+            _close(conn)
 
     @app.get("/api/matches/history")
     def history():
-        reconcile(api, conn)
-        return compute_history(conn)
+        conn = get_conn()
+        try:
+            reconcile(api, conn)
+            return compute_history(conn)
+        finally:
+            _close(conn)
 
     @app.get("/api/performance")
     def performance():
-        return compute_performance(conn)
+        conn = get_conn()
+        try:
+            return compute_performance(conn)
+        finally:
+            _close(conn)
 
     @app.post("/api/reconcile")
     def do_reconcile():
-        return {"reconciled": reconcile(api, conn)}
+        conn = get_conn()
+        try:
+            return {"reconciled": reconcile(api, conn)}
+        finally:
+            _close(conn)
 
     @app.post("/api/tune")
     def do_tune():
-        version = tune(api, conn)
+        conn = get_conn()
+        try:
+            version = tune(api, conn)
+        finally:
+            _close(conn)
         if version is None:
             return {"model_version_id": None, "message": "Pas assez de matchs joués pour ré-ajuster."}
         return {"model_version_id": version["id"], "backtest_rps": version["backtest_rps"]}
@@ -127,11 +156,22 @@ def build_app(api: FootballAPI, conn) -> FastAPI:
     return app
 
 
-def _build_default_app() -> FastAPI:
+def _make_conn_factory(settings):
+    if settings.turso_url:
+        return lambda: storage.connect_turso(settings.turso_url, settings.turso_token)
+    return lambda: storage.connect(settings.db_path)
+
+
+def create_app() -> FastAPI:
     settings = load_settings()
-    storage.init_db(settings.db_path)
-    conn = storage.connect(settings.db_path)
-    return build_app(FootballAPI(settings), conn)
+    get_conn = _make_conn_factory(settings)
+    # Ensure the schema exists once at startup (idempotent: CREATE IF NOT EXISTS).
+    conn = get_conn()
+    storage.init_schema(conn)
+    _close(conn)
+    return build_app(FootballAPI(settings), get_conn)
 
 
-app = _build_default_app()
+# Module-level ASGI app — Vercel's FastAPI framework uses `backend.main:app`
+# (declared in pyproject.toml), and local dev uses `uvicorn backend.main:app`.
+app = create_app()

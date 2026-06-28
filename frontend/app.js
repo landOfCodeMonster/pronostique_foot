@@ -162,4 +162,8 @@ async function load() {
 
 document.getElementById("search").addEventListener("input", (e) => render(e.target.value));
 
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch(() => {});
+}
+
 load();

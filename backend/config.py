@@ -26,17 +26,25 @@ class Settings:
     db_path: Path
     cache_dir: Path
     cache_ttl_seconds: int
+    # When set, storage uses Turso (libSQL) instead of local SQLite (for Vercel).
+    turso_url: str
+    turso_token: str
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     env = env if env is not None else os.environ
+    # On Vercel the project filesystem is read-only; only /tmp is writable.
+    on_vercel = bool(env.get("VERCEL"))
+    cache_dir = Path("/tmp/pf-cache") if on_vercel else PROJECT_ROOT / "data" / "cache"
     return Settings(
         api_key=env.get("FOOTBALL_DATA_API_KEY", ""),
         competition_code=env.get("COMPETITION_CODE", "WC"),
         base_url="https://api.football-data.org/v4",
         db_path=PROJECT_ROOT / "data" / "app.db",
-        cache_dir=PROJECT_ROOT / "data" / "cache",
+        cache_dir=cache_dir,
         # 60s keeps live scores fresh while capping upstream calls at ~1/min
         # (well under football-data.org's 10 requests/minute limit).
         cache_ttl_seconds=60,
+        turso_url=env.get("TURSO_DATABASE_URL", ""),
+        turso_token=env.get("TURSO_AUTH_TOKEN", ""),
     )

@@ -170,3 +170,8 @@ def create_app() -> FastAPI:
     storage.init_schema(conn)
     _close(conn)
     return build_app(FootballAPI(settings), get_conn)
+
+
+# Module-level ASGI app — Vercel's FastAPI framework uses `backend.main:app`
+# (declared in pyproject.toml), and local dev uses `uvicorn backend.main:app`.
+app = create_app()

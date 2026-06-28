@@ -1,0 +1,4 @@
+# Vercel's native FastAPI framework reads the ASGI entrypoint from here.
+# https://vercel.com/docs/frameworks/backend/fastapi#exporting-the-fastapi-application
+[tool.vercel]
+entrypoint = "backend.main:app"
